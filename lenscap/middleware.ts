@@ -1,6 +1,35 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
-export default clerkMiddleware()
+const isPublicRoute = createRouteMatcher(['/signin', '/signup', '/', '/home'])
+
+const isPublicApiRoute = createRouteMatcher(['/api/videos'])
+export default clerkMiddleware((auth, req) => {
+  const { userId } = auth()
+  const currentUrl = new URL(req.url)
+  const isAccessingDashboard = currentUrl.pathname === '/home'
+  const isApiRequest = currentUrl.pathname.startsWith('/api')
+
+  //user is logged in
+  if (userId && isPublicRoute(req) && !isAccessingDashboard) {
+    return NextResponse.redirect(new URL('/home', req.url))
+  }
+
+  //user is not logged in
+  if (!userId) {
+    // and is trying to access protected routes
+    if (!isPublicRoute(req) && !isPublicApiRoute(req)) {
+      return NextResponse.redirect(new URL('/signin', req.url))
+    }
+
+    // requestes for protected API
+    if (isApiRequest && !isPublicApiRoute) {
+      return NextResponse.redirect(new URL('/sigin', req.url))
+    }
+  }
+
+  return NextResponse.next()
+})
 
 export const config = {
   matcher: [
