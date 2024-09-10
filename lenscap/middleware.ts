@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 const isPublicRoute = createRouteMatcher(['/sign-in', '/sign-up', '/', '/home'])
 
-const isPublicApiRoute = createRouteMatcher(['/api/videos'])
+const isPublicApiRoute = createRouteMatcher(['/api/video'])
 export default clerkMiddleware((auth, req) => {
   const { userId } = auth()
   const currentUrl = new URL(req.url)
